@@ -1,7 +1,10 @@
 import android.app.AlertDialog
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.InputType
 import android.widget.EditText
+import android.widget.Toast
 import com.example.atm.database.ActionEntry
 import com.example.atm.database.AppDatabase
 import com.example.atm.database.Balance
@@ -73,18 +76,26 @@ class Bank {
             val balanceDao = db.balanceDao()
             val current = balanceDao.getBalance()?.amount ?: 0.0
 
-            balanceDao.updateBalance(Balance(id = 1, amount = current - num))
-
-            db.actionDao().insert(ActionEntry(title = "Withdrawal", date = getCurrentDateTime()))
-
-            val allItems = db.actionDao().getAllActions()
-            val hist = allItems.mapIndexed { index, action ->
-                History(action.title, action.date, index)
+            if (current - num < 0) {
+                Handler(Looper.getMainLooper()).post {
+                Toast.makeText(cont, "Insufficient Funds", Toast.LENGTH_SHORT).show()
+                    }
             }
+            else {
+                balanceDao.updateBalance(Balance(id = 1, amount = current - num))
 
-            balance = db.balanceDao().getBalance()?.amount ?: 0.0
+                db.actionDao()
+                    .insert(ActionEntry(title = "Withdrawal", date = getCurrentDateTime()))
 
-            onComplete(hist)
+                val allItems = db.actionDao().getAllActions()
+                val hist = allItems.mapIndexed { index, action ->
+                    History(action.title, action.date, index)
+                }
+
+                balance = db.balanceDao().getBalance()?.amount ?: 0.0
+
+                onComplete(hist)
+            }
         }
     }
 
