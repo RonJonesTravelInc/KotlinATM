@@ -55,7 +55,7 @@ class Bank {
                     dte = action.date,
                     id = action.id // or use 'index' if you want the list position
                 )
-            }
+            }.sortedByDescending { it.dte }
 
             // 3. Send the completed list back
             onComplete(historyList)

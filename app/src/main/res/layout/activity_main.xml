@@ -2,21 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/over"
+    android:background="@color/purple_200"
     android:orientation="vertical">
-
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        />
+        android:layout_height="100dp"
+        android:src="@drawable/ti"
+        android:scaleType="fitCenter">
+    </ImageView>
+
     <TextView
         android:id="@+id/textView"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:background="@color/white"
+        android:layout_marginTop="50dp"
         android:text="Welcome"
-        android:textColor="@color/purple_700"
+        android:textColor="@color/white"
         android:textSize="30dp"/>
 
     <GridLayout
@@ -43,16 +44,16 @@
             android:id="@+id/withdraw"
             android:text="Withdraw"
             android:layout_marginBottom="5dp"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/purple_200"
+            android:textColor="@color/purple_700"
+            android:backgroundTint="@color/white"
             android:layout_gravity="fill"
             android:layout_rowWeight="1"
             android:layout_columnWeight="1"/>
         <Button
             android:id="@+id/balance"
             android:text="Check balance"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/purple_200"
+            android:textColor="@color/purple_700"
+            android:backgroundTint="@color/white"
             android:layout_marginEnd="5dp"
             android:layout_gravity="fill"
             android:layout_rowWeight="1"
@@ -73,10 +74,18 @@
         android:id="@+id/help"
         android:layout_marginStart="300dp"
         android:layout_width="100dp"
-        android:layout_height="40dp"
+        android:layout_height="50dp"
         android:backgroundTint="@color/white"
         android:text="Help"
-        android:textColor="@color/purple_200"
+        android:textColor="@color/purple_700"
         android:textSize="20dp"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:src="@drawable/designpurp"
+        android:scaleType="fitXY">
+
+    </ImageView>
 
 </LinearLayout>

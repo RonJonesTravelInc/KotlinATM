@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/over"
+    android:background="@color/purple_200"
     android:orientation="vertical">
 
      <TextView
@@ -22,6 +22,8 @@
     <Button
         android:layout_marginEnd="20dp"
         android:id="@+id/back"
+        android:textColor="@color/purple_700"
+        android:backgroundTint="@color/white"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:text="back"
@@ -37,6 +39,8 @@
         <Button
             android:layout_marginStart="20dp"
             android:id="@+id/clear"
+            android:textColor="@color/purple_700"
+            android:backgroundTint="@color/white"
             android:layout_width="100dp"
             android:layout_height="50dp"
             android:text="clear"
@@ -54,5 +58,13 @@
         android:background="@color/white"
         android:verticalSpacing="6dp"
         />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:src="@drawable/designpurp"
+        android:scaleType="fitXY">
+
+    </ImageView>
 
 </LinearLayout>
