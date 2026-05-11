@@ -1,9 +1,13 @@
 package com.example.atm.database
 
 import android.content.Context
+import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
+import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
@@ -23,12 +27,13 @@ data class Balance(
     val amount: Double = 0.0
 )
 
+
+
 // FIX 2: Added Balance::class to the entities list
 @Database(entities = [ActionEntry::class, Balance::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun actionDao(): ActionDao
     abstract fun balanceDao(): BalanceDao
-    // If you created a BalanceDao, you would add it here too
 
     companion object {
         @Volatile
@@ -47,3 +52,4 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 }
+

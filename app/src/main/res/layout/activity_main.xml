@@ -2,51 +2,81 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/over"
     android:orientation="vertical">
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        />
     <TextView
         android:id="@+id/textView"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:background="@color/white"
         android:text="Welcome"
+        android:textColor="@color/purple_700"
         android:textSize="30dp"/>
 
-    <LinearLayout
+    <GridLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="200dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="10dp"
+        android:columnCount="2"
+        android:rowCount="2"
+        >
 
         <Button
-            android:id="@+id/checkBalance"
-            android:layout_width="120dp"
-            android:layout_height="50dp"
-            android:text="Balance"
-            android:textSize="20dp"/>
+            android:id="@+id/deposit"
+            android:text="deposit"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="5dp"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/purple_500"
+            android:layout_gravity="fill"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"/>
+        <Button
+            android:id="@+id/withdraw"
+            android:text="Withdraw"
+            android:layout_marginBottom="5dp"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/purple_200"
+            android:layout_gravity="fill"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"/>
+        <Button
+            android:id="@+id/balance"
+            android:text="Check balance"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/purple_200"
+            android:layout_marginEnd="5dp"
+            android:layout_gravity="fill"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"/>
+        <Button
+            android:id="@+id/history"
+            android:text="See History"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/purple_500"
+
+            android:layout_gravity="fill"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"/>
+
+    </GridLayout>
 
     <Button
-        android:id="@+id/deposit"
-        android:layout_width="120dp"
-        android:layout_height="50dp"
-        android:text="Deposit"
+        android:id="@+id/help"
+        android:layout_marginStart="300dp"
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:backgroundTint="@color/white"
+        android:text="Help"
+        android:textColor="@color/purple_200"
         android:textSize="20dp"/>
-
-    <Button
-        android:id="@+id/withdraw"
-        android:layout_width="150dp"
-        android:layout_height="50dp"
-        android:text="Withdraw"
-        android:textSize="20dp"/>
-
-        </LinearLayout>
-
-    <GridView
-        android:id="@+id/grid"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:horizontalSpacing="6dp"
-        android:numColumns="1"
-        android:verticalSpacing="6dp"
-        />
-
 
 </LinearLayout>

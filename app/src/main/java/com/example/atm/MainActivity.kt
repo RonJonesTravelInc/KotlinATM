@@ -1,6 +1,8 @@
 package com.example.atm
 
 import Bank
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.GridView
@@ -10,96 +12,106 @@ import androidx.activity.ComponentActivity
 import com.example.atm.adapters.HisotryAdapter
 import com.example.atm.database.AppDatabase
 import com.example.atm.objects.History
+import java.text.NumberFormat
 
 class MainActivity : ComponentActivity() {
-
-    val bank = Bank()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        // 4. Extract the amount (or default to 0.0 if the table is empty)
 
         val txtView = findViewById<TextView>(R.id.textView)
-        val gridView = findViewById<GridView>(R.id.grid)
-        val balance = findViewById<Button>(R.id.checkBalance)
-        val increase = findViewById<Button>(R.id.deposit)
-        val deduct = findViewById<Button>(R.id.withdraw)
+        val hist = findViewById<Button>(R.id.history)
+        val balance = findViewById<Button>(R.id.balance)
+        val depo = findViewById<Button>(R.id.deposit)
+        val withdr = findViewById<Button>(R.id.withdraw)
+        val help = findViewById<Button>(R.id.help)
 
-        bank.getHistory(this) { historyArray ->
-            // 2. Wait for the background thread to finish, then jump to UI thread
+        kotlin.concurrent.thread {
+            val bank = Bank()
+            val currentAmount = bank.getBalance(this, "checkings")
+            val defaultFormat = NumberFormat.getCurrencyInstance().format(currentAmount)
+
             runOnUiThread {
-                // 3. NOW set the adapter because we finally have the data
-                gridView.adapter = HisotryAdapter(historyArray, this)
+                val txtView = findViewById<TextView>(R.id.textView)
+                txtView.text = "Your checkings balance is: $defaultFormat"
+                android.widget.Toast.makeText(this, "${"checkings".replaceFirstChar { it.uppercase() }} balance updated", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        help.setOnClickListener {
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = Uri.parse("mailto:") // Only email apps should handle this
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("ron.jones@travelinc.com", "rich.blaske@travelinc.com"))
+                putExtra(Intent.EXTRA_SUBJECT, "New atm message")
+                putExtra(Intent.EXTRA_TEXT, "This is a message from the atm app")
+            }
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            }
+            else {
+                Toast.makeText(this, "No email account", Toast.LENGTH_SHORT).show()
             }
         }
 
 
-        //set the list for the ui to see
-        var history: List<History> = emptyList()
-        val histo = bank.getHistory(this) { historyArray ->
-            runOnUiThread {
-                history = historyArray
-            }
+        hist.setOnClickListener {
+            val intent = Intent(this, HistoryActivity::class.java)
+            startActivity(intent)
+        }
+
+        depo.setOnClickListener {
+            val intent = Intent(this, ChooseActivity::class.java)
+            intent.putExtra("from_page", "deposit");
+            startActivity(intent)
+        }
+
+        withdr.setOnClickListener {
+            val intent = Intent(this, ChooseActivity::class.java)
+            intent.putExtra("from_page", "withdraw");
+            startActivity(intent)
         }
 
         balance.setOnClickListener {
-            // 1. Get the database instance
-            val db = AppDatabase.getDatabase(this)
+            val accounts = arrayOf("Checkings", "Savings")
 
-            // 2. Launch background thread to avoid "Main Thread" crashes
-            kotlin.concurrent.thread {
-                // 3. Fetch the balance object from the DB
-                val balanceEntry = db.balanceDao().getBalance()
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Select Account")
+                .setItems(accounts) { _, which ->
+                    // 'which' is the index (0 for Checkings, 1 for Savings)
+                    val acc = if (which == 0) "checkings" else "savings"
 
-                // 4. Extract the amount (or default to 0.0 if the table is empty)
-                val currentAmount = balanceEntry?.amount ?: 0.0
+                    // Now run your existing logic with the chosen 'acc'
+                    kotlin.concurrent.thread {
+                        val bank = Bank()
+                        val currentAmount = bank.getBalance(this, acc)
+                        val defaultFormat = NumberFormat.getCurrencyInstance().format(currentAmount)
 
-                // 5. Switch back to the UI thread to update the TextView
-                runOnUiThread {
-                    txtView.text = "Your balance is: $$currentAmount"
-                }
-            }
-        }
-
-        increase.setOnClickListener {
-            bank.showTransactionDialog(this,"Deposit Funds") { amount ->
-                // This runs when they press "OK"
-                bank.addFunds(amount, this) { updatedHistory ->
-                    runOnUiThread {
-                        Toast.makeText(this, "Deposited: $$amount", Toast.LENGTH_SHORT).show()
-                        bank.getHistory(this) { historyArray ->
-                            // This runs once the database finishes reading
-                            runOnUiThread {
-                                history = historyArray
-                                gridView.adapter = HisotryAdapter(history, this)
-                            }
+                        runOnUiThread {
+                            txtView.text = "Your balance is: $defaultFormat"
+                            android.widget.Toast.makeText(this, "${acc.replaceFirstChar { it.uppercase() }} balance updated", android.widget.Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
-            }
+                .show()
         }
 
-        deduct.setOnClickListener {
-            bank.showTransactionDialog(this,"Withdraw Funds") { amount ->
-                // This runs when they press "OK"
-                bank.deductFunds(amount, this) { updatedHistory ->
-                    runOnUiThread {
-                        Toast.makeText(this, "Withdrew: $$amount", Toast.LENGTH_SHORT).show()
-                        bank.getHistory(this) { historyArray ->
-                            // This runs once the database finishes reading
-                            runOnUiThread {
-                                history = historyArray
-                                gridView.adapter = HisotryAdapter(history, this)
-                            }
-                        }
+    }
 
-                    }
-                }
+
+    override fun onResume() {
+        super.onResume()
+        kotlin.concurrent.thread {
+            val bank = Bank()
+            val currentAmount = bank.getBalance(this, "checkings")
+            val defaultFormat = NumberFormat.getCurrencyInstance().format(currentAmount)
+
+            runOnUiThread {
+                val txtView = findViewById<TextView>(R.id.textView)
+                txtView.text = "Your checkings balance is: $defaultFormat"
+                android.widget.Toast.makeText(this, "${"checkings".replaceFirstChar { it.uppercase() }} balance updated", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
-
-
-        gridView.adapter = HisotryAdapter(history, this)
     }
 }

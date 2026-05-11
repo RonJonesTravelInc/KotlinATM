@@ -15,8 +15,8 @@ interface ActionDao {
 
 @Dao
 interface BalanceDao {
-    @Query("SELECT * FROM balance_table LIMIT 1")
-    fun getBalance(): Balance?
+    @Query("SELECT * FROM balance_table WHERE id = :accountId LIMIT 1")
+    fun getBalanceById(accountId: Int): Balance?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun updateBalance(balance: Balance)

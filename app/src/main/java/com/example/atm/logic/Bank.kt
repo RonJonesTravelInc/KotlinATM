@@ -22,31 +22,23 @@ class Bank {
         return dateFormat.format(date)
     }
 
-    fun addFunds(num: Double, cont: Context, onComplete: (List<History>) -> Unit) {
+    fun getBalance(cont: Context, acc: String): Double {
         val db = AppDatabase.getDatabase(cont)
-        val actionDao = db.actionDao()
-        val balanceDao = db.balanceDao()
 
-        kotlin.concurrent.thread {
-            // 1. Update Balance
-            val currentBalanceEntry = balanceDao.getBalance()
-            val currentAmount = currentBalanceEntry?.amount ?: 0.0
-            val newAmount = currentAmount + num
-            balanceDao.updateBalance(Balance(id = 1, amount = newAmount))
+        // Map the string input to your database IDs
+        var accountId = 1
 
-            val newAction = ActionEntry(title = "Deposit", date = getCurrentDateTime())
-            actionDao.insert(newAction)
-
-            val allItems = actionDao.getAllActions()
-            val hist = allItems.mapIndexed { index, action ->
-                History(action.title, action.date, index)
-            }
-
-            balance = db.balanceDao().getBalance()?.amount ?: 0.0
-            // 4. Send the result back to the UI
-            onComplete(hist)
+        if (acc == "savings") {
+            accountId = 2
         }
+        // Call the DAO method that fetches by ID
+        val balanceEntry = db.balanceDao().getBalanceById(accountId)
+
+        return balanceEntry?.amount ?: 0.0
     }
+
+
+
 
     fun getHistory(cont: Context, onComplete: (List<History>) -> Unit) {
         val db = AppDatabase.getDatabase(cont)
@@ -70,30 +62,78 @@ class Bank {
         }
     }
 
-    fun deductFunds(num: Double, cont: Context, onComplete: (List<History>) -> Unit) {
+    fun addFunds(acc: String, num: Double, cont: Context, onComplete: (List<History>) -> Unit) {
         val db = AppDatabase.getDatabase(cont)
+        val actionDao = db.actionDao()
+        val balanceDao = db.balanceDao()
+        val bank = Bank()
+
         kotlin.concurrent.thread {
-            val balanceDao = db.balanceDao()
-            val current = balanceDao.getBalance()?.amount ?: 0.0
-
-            if (current - num < 0) {
-                Handler(Looper.getMainLooper()).post {
-                Toast.makeText(cont, "Insufficient Funds", Toast.LENGTH_SHORT).show()
-                    }
+            var accountId = 1
+            if (acc == "savings") {
+                accountId = 2
             }
-            else {
-                balanceDao.updateBalance(Balance(id = 1, amount = current - num))
 
-                db.actionDao()
-                    .insert(ActionEntry(title = "Withdrawal", date = getCurrentDateTime()))
+            val currentBalanceEntry = bank.getBalance(cont, acc)
+            val currentAmount = currentBalanceEntry
+            val newAmount = currentAmount + num
 
-                val allItems = db.actionDao().getAllActions()
+            balanceDao.updateBalance(Balance(id = accountId, amount = newAmount))
+
+            val newAction = ActionEntry(
+                title = "Deposit to ${acc.replaceFirstChar { it.uppercase() }}",
+                date = getCurrentDateTime()
+            )
+            actionDao.insert(newAction)
+
+            // 4. Retrieve history and map to UI model
+            val allItems = actionDao.getAllActions()
+            val hist = allItems.mapIndexed { index, action ->
+                History(action.title, action.date, index)
+            }
+
+            // 5. Return the result
+            onComplete(hist)
+        }
+    }
+
+    fun deductFunds(acc: String, num: Double, cont: Context, onComplete: (List<History>) -> Unit) {
+        val db = AppDatabase.getDatabase(cont)
+        val actionDao = db.actionDao()
+        val balanceDao = db.balanceDao()
+        val bank = Bank()
+
+        kotlin.concurrent.thread {
+            // 1. Determine ID based on account type
+            val accountId = if (acc.lowercase() == "savings") 2 else 1
+
+            // 2. Fetch current balance using your helper
+            val currentAmount = bank.getBalance(cont, acc)
+
+            // 3. Check for insufficient funds
+            if (currentAmount - num < 0) {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    android.widget.Toast.makeText(cont, "Insufficient Funds", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                // 4. Perform the deduction
+                val newAmount = currentAmount - num
+                balanceDao.updateBalance(Balance(id = accountId, amount = newAmount))
+
+                // 5. Log the action with the account name
+                val newAction = ActionEntry(
+                    title = "Withdrawal from ${acc.replaceFirstChar { it.uppercase() }}",
+                    date = getCurrentDateTime()
+                )
+                actionDao.insert(newAction)
+
+                // 6. Retrieve updated history
+                val allItems = actionDao.getAllActions()
                 val hist = allItems.mapIndexed { index, action ->
                     History(action.title, action.date, index)
                 }
 
-                balance = db.balanceDao().getBalance()?.amount ?: 0.0
-
+                // 7. Return the result to the UI
                 onComplete(hist)
             }
         }
