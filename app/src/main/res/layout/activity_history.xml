@@ -8,10 +8,12 @@
     android:orientation="vertical"
     >
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/backButton"
         android:layout_width="100dp"
         android:layout_height="50dp"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/purple_700"
         android:text="Back"
         />
 

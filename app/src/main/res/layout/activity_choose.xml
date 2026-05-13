@@ -5,14 +5,16 @@
     android:background="@color/white"
     android:orientation="vertical">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/back"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:text="Back"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/purple_700"
         android:layout_marginTop="0dp">
 
-    </Button>
+    </com.google.android.material.button.MaterialButton>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,7 +41,7 @@
 
     </LinearLayout>
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:layout_width="match_parent"
         android:layout_height="300dp"
         android:text="Choose an Account!"
@@ -47,6 +49,6 @@
         android:textAlignment="center"
         android:textSize="34sp"
         android:textColor="@color/purple_700">
-    </TextView>
+    </com.google.android.material.textview.MaterialTextView>
 
 </LinearLayout>

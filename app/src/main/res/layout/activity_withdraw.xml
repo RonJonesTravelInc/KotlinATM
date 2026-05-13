@@ -5,7 +5,7 @@
     android:background="@color/purple_200"
     android:orientation="vertical">
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="100dp"
@@ -18,7 +18,7 @@
         android:layout_height="50dp"
         android:orientation="horizontal">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/back"
             android:layout_marginEnd="20dp"
             android:layout_width="100dp"
@@ -28,14 +28,16 @@
             android:backgroundTint="@color/white"
             android:textSize="20dp"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/withdraw"
             android:layout_width="140dp"
             android:layout_height="50dp"
             android:text="withdraw"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/purple_500"
             android:textSize="20dp"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/clear"
             android:layout_marginStart="20dp"
             android:layout_width="100dp"

@@ -5,7 +5,7 @@
     android:background="@color/purple_200"
     android:orientation="vertical">
 
-     <TextView
+     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="100dp"
@@ -19,7 +19,7 @@
         android:orientation="horizontal"
         >
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:layout_marginEnd="20dp"
         android:id="@+id/back"
         android:textColor="@color/purple_700"
@@ -29,14 +29,16 @@
         android:text="back"
         android:textSize="20dp"/>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/deposit"
         android:layout_width="120dp"
         android:layout_height="50dp"
         android:text="deposit"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/purple_500"
         android:textSize="20dp"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:layout_marginStart="20dp"
             android:id="@+id/clear"
             android:textColor="@color/purple_700"
