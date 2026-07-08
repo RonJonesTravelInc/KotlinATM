@@ -1,62 +1,73 @@
+
 package com.example.atm
 
-import Bank
 import android.os.Bundle
+import android.view.Menu
 import android.widget.Button
 import android.widget.GridView
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import com.example.atm.R
 import com.example.atm.adapters.HisotryAdapter
-import com.example.atm.databinding.ActivityHistoryBinding
-import com.example.atm.objects.History
+import com.example.sql.DBFunctions
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class HistoryActivity : AppCompatActivity() {
+
+    lateinit var accounts: List<DBFunctions.Account>
+
+    override fun onResume() {
+        super.onResume()
+        setUpAccounts()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_history)
 
-        val gridView = findViewById<GridView>(R.id.grid)
-        val bank = Bank()
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
 
         val back = findViewById<Button>(R.id.backButton)
-
         back.setOnClickListener {
             finish()
         }
 
-        bank.getHistory(this) { historyArray ->
-            // 2. Wait for the background thread to finish, then jump to UI thread
-            runOnUiThread {
-                // 3. NOW set the adapter because we finally have the data
-                gridView.adapter = HisotryAdapter(historyArray, this)
+         setUpAccounts()
+
+        bottomNav.setOnItemSelectedListener { item ->
+            if (item.itemId == 0) {
+                loadHistory(null)
+            } else {
+                loadHistory(item.itemId)
             }
+            true
         }
 
-
-        //set the list for the ui to see
-        var history: List<History> = emptyList()
-        val histo = bank.getHistory(this) { historyArray ->
-            runOnUiThread {
-                history = historyArray
-            }
-        }
-
-        bank.getHistory(this) { historyArray ->
-            // 2. Wait for the background thread to finish, then jump to UI thread
-            runOnUiThread {
-                // 3. NOW set the adapter because we finally have the data
-                gridView.adapter = HisotryAdapter(historyArray, this)
-            }
-        }
-
-        gridView.adapter = HisotryAdapter(history, this)
+        loadHistory(null)
     }
 
+    fun loadHistory(accountId: Int?) {
+        val bank = Bank()
+        val gridView = findViewById<GridView>(R.id.grid)
 
+        bank.getHistory(this, accountId) { historyArray ->
+            runOnUiThread {
+                gridView.adapter = HisotryAdapter(historyArray, this@HistoryActivity)
+            }
+        }
+    }
+
+    fun setUpAccounts() {
+        val bank = Bank()
+        accounts = bank.getAccounts(this)
+
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
+
+        bottomNav.menu.clear()
+
+        accounts = accounts.take(5)
+
+        accounts.forEach { account ->
+            val typeLabel = if (account.account_type_id == 1) "Checking" else "Savings"
+            bottomNav.menu.add(Menu.NONE, account.account_id, Menu.NONE, "$typeLabel (${account.account_id})")
+        }
+    }
 }

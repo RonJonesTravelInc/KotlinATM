@@ -1,14 +1,10 @@
-import android.app.AlertDialog
+package com.example.atm
+
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.text.InputType
-import android.widget.EditText
+import android.util.Log
 import android.widget.Toast
-import com.example.atm.database.ActionEntry
-import com.example.atm.database.AppDatabase
-import com.example.atm.database.Balance
 import com.example.atm.objects.History
+import com.example.sql.DBFunctions
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -22,142 +18,168 @@ class Bank {
         return dateFormat.format(date)
     }
 
-    fun getBalance(cont: Context, acc: String): Double {
-        val db = AppDatabase.getDatabase(cont)
-
-        // Map the string input to your database IDs
-        var accountId = 1
-
-        if (acc == "savings") {
-            accountId = 2
-        }
-        // Call the DAO method that fetches by ID
-        val balanceEntry = db.balanceDao().getBalanceById(accountId)
-
-        return balanceEntry?.amount ?: 0.0
+    private fun getLoggedInUserId(context: Context): Int {
+        val sharedPreferences = context.getSharedPreferences("LocalAuth", Context.MODE_PRIVATE)
+        return sharedPreferences.getInt("user_id", -1)
     }
 
+    fun getBalance(cont: Context, acc: DBFunctions.Account?): Double {
+        val db = DBFunctions.getInstance(cont)
+        val userId = getLoggedInUserId(cont)
 
+        val dbReadable = db.readableDatabase
 
+        var balanceAmount = 0.0
+        val cursor = dbReadable.rawQuery(
+            "SELECT balance FROM Accounts WHERE account_id = ?",
+            arrayOf(acc?.account_id.toString())
+        )
 
-    fun getHistory(cont: Context, onComplete: (List<History>) -> Unit) {
-        val db = AppDatabase.getDatabase(cont)
-        val actionDao = db.actionDao()
-
-        kotlin.concurrent.thread {
-            // 1. Get the raw entries from Room
-            val entries = actionDao.getAllActions()
-
-            // 2. Convert ActionEntry objects into History objects
-            val historyList = entries.mapIndexed { index, action ->
-                History(
-                    txt = action.title,
-                    dte = action.date,
-                    id = action.id // or use 'index' if you want the list position
-                )
-            }.sortedByDescending { it.dte }
-
-            // 3. Send the completed list back
-            onComplete(historyList)
-        }
-    }
-
-    fun addFunds(acc: String, num: Double, cont: Context, onComplete: (List<History>) -> Unit) {
-        val db = AppDatabase.getDatabase(cont)
-        val actionDao = db.actionDao()
-        val balanceDao = db.balanceDao()
-        val bank = Bank()
-
-        kotlin.concurrent.thread {
-            var accountId = 1
-            if (acc == "savings") {
-                accountId = 2
-            }
-
-            val currentBalanceEntry = bank.getBalance(cont, acc)
-            val currentAmount = currentBalanceEntry
-            val newAmount = currentAmount + num
-
-            balanceDao.updateBalance(Balance(id = accountId, amount = newAmount))
-
-            val newAction = ActionEntry(
-                title = "Deposit to ${acc.replaceFirstChar { it.uppercase() }}",
-                date = getCurrentDateTime()
+        if (cursor.moveToFirst()) {
+            balanceAmount = cursor.getDouble(cursor.getColumnIndexOrThrow("balance"))
+        } else {
+            cursor.close()
+            db.insertAccount(
+                userId = userId,
+                accountTypeId = acc?.account_type_id ?: 0 ,
+                balance = 0.0,
+                dateOpened = getCurrentDateTime()
             )
-            actionDao.insert(newAction)
-
-            // 4. Retrieve history and map to UI model
-            val allItems = actionDao.getAllActions()
-            val hist = allItems.mapIndexed { index, action ->
-                History(action.title, action.date, index)
-            }
-
-            // 5. Return the result
-            onComplete(hist)
+            return 1000.0
         }
+        cursor.close()
+        return balanceAmount
     }
 
-    fun deductFunds(acc: String, num: Double, cont: Context, onComplete: (List<History>) -> Unit) {
-        val db = AppDatabase.getDatabase(cont)
-        val actionDao = db.actionDao()
-        val balanceDao = db.balanceDao()
-        val bank = Bank()
+    fun getAccounts(cont: Context): List<com.example.sql.DBFunctions.Account> {
+        val db = DBFunctions.getInstance(cont)
+        val userId = getLoggedInUserId(cont)
+        val dbReadable = db.readableDatabase
+        val accountList = mutableListOf<com.example.sql.DBFunctions.Account>()
 
-        kotlin.concurrent.thread {
-            // 1. Determine ID based on account type
-            val accountId = if (acc.lowercase() == "savings") 2 else 1
+        val cursor = dbReadable.rawQuery(
+            "SELECT * FROM Accounts WHERE user_id = ?",
+            arrayOf(userId.toString())
+        )
 
-            // 2. Fetch current balance using your helper
-            val currentAmount = bank.getBalance(cont, acc)
-
-            // 3. Check for insufficient funds
-            if (currentAmount - num < 0) {
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    android.widget.Toast.makeText(cont, "Insufficient Funds", android.widget.Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                // 4. Perform the deduction
-                val newAmount = currentAmount - num
-                balanceDao.updateBalance(Balance(id = accountId, amount = newAmount))
-
-                // 5. Log the action with the account name
-                val newAction = ActionEntry(
-                    title = "Withdrawal from ${acc.replaceFirstChar { it.uppercase() }}",
-                    date = getCurrentDateTime()
+        if (cursor.moveToFirst()) {
+            do {
+                val account = com.example.sql.DBFunctions.Account(
+                    account_id = cursor.getInt(cursor.getColumnIndexOrThrow("account_id")),
+                    user_id = cursor.getInt(cursor.getColumnIndexOrThrow("user_id")),
+                    account_type_id = cursor.getInt(cursor.getColumnIndexOrThrow("account_type_id")),
+                    balance = cursor.getDouble(cursor.getColumnIndexOrThrow("balance")),
+                    date_opened = cursor.getString(cursor.getColumnIndexOrThrow("date_opened"))
                 )
-                actionDao.insert(newAction)
-
-                // 6. Retrieve updated history
-                val allItems = actionDao.getAllActions()
-                val hist = allItems.mapIndexed { index, action ->
-                    History(action.title, action.date, index)
-                }
-
-                // 7. Return the result to the UI
-                onComplete(hist)
-            }
+                accountList.add(account)
+            } while (cursor.moveToNext())
         }
+        cursor.close()
+        return accountList
     }
 
-     fun showTransactionDialog(cont: Context, title: String, onConfirm: (Double) -> Unit) {
-        val builder = AlertDialog.Builder(cont)
-        builder.setTitle(title)
+    fun getHistory(cont: Context, accountId: Int? = null, onComplete: (List<History>) -> Unit) {
+        val db = DBFunctions.getInstance(cont)
+        val userId = getLoggedInUserId(cont)
+        val dbReadable = db.readableDatabase
+        val historyList = mutableListOf<History>()
 
-        // Create the input field
-        val input = EditText(cont)
-        input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-        input.hint = "Enter amount"
-        builder.setView(input)
+        val query = if (accountId != null) {
+            "SELECT * FROM Transactions WHERE user_id = ? AND account_id = ?"
+        } else {
+            "SELECT * FROM Transactions WHERE user_id = ?"
+        }
 
-        // Set up the buttons
-        builder.setPositiveButton("OK") { _, _ ->
-            val amount = input.text.toString().toDoubleOrNull() ?: 0.0
-            if (amount > 0) {
-                onConfirm(amount)
+        val args = if (accountId != null) {
+            arrayOf(userId.toString(), accountId.toString())
+        } else {
+            arrayOf(userId.toString())
+        }
+
+        val cursor = dbReadable.rawQuery(query, args)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val history = History(
+                    txt = cursor.getString(cursor.getColumnIndexOrThrow("description")),
+                    dte = cursor.getString(cursor.getColumnIndexOrThrow("date_time")),
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow("transaction_id"))
+                )
+                historyList.add(history)
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+
+        historyList.sortByDescending { it.dte }
+        onComplete(historyList)
+    }
+
+    fun addFunds(acc: Int, type: Int, num: Double, cont: Context, onComplete: (Boolean) -> Unit) {
+        Log.d("adding", num.toString())
+        val db = DBFunctions.getInstance(cont)
+        val userId = getLoggedInUserId(cont)
+        val accountTypeId = type
+        val accs = db.getAccount(userId, acc)
+        val currentAmount = accs?.balance
+        val newAmount = currentAmount?.plus(num)
+
+        val accountId = acc
+        val updatedAccount = com.example.sql.DBFunctions.Account(
+            account_id = accountId,
+            user_id = userId,
+            account_type_id = accountTypeId,
+            balance = newAmount ?: 0.0,
+            date_opened = getCurrentDateTime()
+        )
+        db.updateAccount(updatedAccount)
+
+        db.insertTransaction(
+            transactionID = System.currentTimeMillis().toString(),
+            userID = userId.toString(),
+            accountId = accountId,
+            amount = num,
+            description = "Deposit to ${acc.toString().replaceFirstChar { it.uppercase() }}",
+            dateTime = getCurrentDateTime()
+        )
+
+        onComplete(true)
+    }
+
+    fun deductFunds(acc: Int, type: Int, num: Double, cont: Context, onComplete: (Boolean) -> Unit) {
+        val db = DBFunctions.getInstance(cont)
+        val userId = getLoggedInUserId(cont)
+        val accountTypeId = type
+        val accs = db.getAccount(userId, acc)
+        val currentAmount = accs?.balance
+
+        currentAmount?.minus(num)?.let {
+            if (it < 0) {
+                Toast.makeText(cont, "Insufficient Funds", Toast.LENGTH_SHORT).show()
+                onComplete(false)
+            } else {
+                val newAmount = currentAmount?.minus(num)
+                val accountId = acc
+
+                val updatedAccount = com.example.sql.DBFunctions.Account(
+                    account_id = accountId,
+                    user_id = userId,
+                    account_type_id = accountTypeId,
+                    balance = newAmount ?: 0.0,
+                    date_opened = getCurrentDateTime()
+                )
+                db.updateAccount(updatedAccount)
+
+                db.insertTransaction(
+                    transactionID = System.currentTimeMillis().toString(),
+                    userID = userId.toString(),
+                    accountId = accountId,
+                    amount = num,
+                    description = "Withdrawal from ${acc.toString().replaceFirstChar { it.uppercase() }}",
+                    dateTime = getCurrentDateTime()
+                )
+
+                onComplete(true)
             }
         }
-        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
-
-        builder.show()
     }
 }

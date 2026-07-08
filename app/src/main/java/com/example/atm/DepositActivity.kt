@@ -1,6 +1,5 @@
 package com.example.atm
 
-import Bank
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -14,13 +13,21 @@ import java.text.NumberFormat
 
 class DepositActivity : AppCompatActivity() {
 
+    var userId: Int? = 0
     val bank = Bank()
+
+    override fun onResume() {
+        super.onResume()
+        userId = intent.getIntExtra("user_id", -1)    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_deposit)
 
         val intent = intent
-        val account_name = intent.getStringExtra("account")
+        userId = intent.getIntExtra("user_id", -1)
+        val account_id = intent.getIntExtra("account_id", 0)
+        val account_type = intent.getIntExtra("account_type", 0)
 
         var btnList = listOf<Button>(
             NumBtn(this, 0), NumBtn(this, 1),
@@ -47,7 +54,9 @@ class DepositActivity : AppCompatActivity() {
         }
 
         back.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java).apply {
+                putExtra("user_id", userId)
+            }
             startActivity(intent)
         }
 
@@ -62,14 +71,15 @@ class DepositActivity : AppCompatActivity() {
                 val amount = txtView.text.toString().toDouble()
                 val defaultFormat = NumberFormat.getCurrencyInstance().format(amount)
 
-                // This runs when they press "OK"
-                if (account_name != null) {
-                    bank.addFunds(account_name, amount, this) { updatedHistory ->
-                        runOnUiThread {
-                            Toast.makeText(this, "Deposited: $defaultFormat", Toast.LENGTH_SHORT)
-                                .show()
-                            txtView.text = "Enter"
+                bank.addFunds(account_id, account_type, amount, cont = this) { isSuccess ->
+                    runOnUiThread {
+                        Toast.makeText(this, "Deposited: $defaultFormat", Toast.LENGTH_SHORT)
+                            .show()
+                        val intent = Intent(this@DepositActivity, MainActivity::class.java).apply {
+                            putExtra("user_id", userId)
                         }
+                        startActivity(intent)
+                        this@DepositActivity.finish()
                     }
                 }
             }

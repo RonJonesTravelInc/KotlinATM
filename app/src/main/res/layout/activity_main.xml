@@ -11,11 +11,22 @@
         android:scaleType="fitCenter">
     </ImageView>
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/addAcc"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:backgroundTint="@color/white"
+        android:text="Add Account"
+        android:layout_marginStart="20dp"
+        android:textColor="@color/purple_700"
+        android:textSize="20dp"/>
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/textView"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="8dp"
         android:text="Welcome"
         android:textColor="@color/white"
         android:textSize="30dp"/>
@@ -27,6 +38,8 @@
         android:layout_marginTop="100dp"
         android:layout_marginBottom="10dp"
         android:columnCount="2"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:rowCount="2"
         >
 
@@ -72,11 +85,11 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/help"
-        android:layout_marginStart="300dp"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:backgroundTint="@color/white"
         android:text="Help"
+        android:layout_marginStart="20dp"
         android:textColor="@color/purple_700"
         android:textSize="20dp"/>
 
