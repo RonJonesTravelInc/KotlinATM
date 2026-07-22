@@ -5,7 +5,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.os.Parcelable
 import android.util.Log
+import kotlinx.parcelize.Parcelize
 //hashing
 import java.security.MessageDigest
 
@@ -58,7 +60,7 @@ class DBFunctions(context: Context) :
         // Updated to include username and password_hash columns
         val createClientTableQuery = "CREATE TABLE Clients (user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password_hash TEXT, dob TEXT, email TEXT, first_name TEXT, last_name TEXT, address TEXT)"
         val createAccountsTableQuery = "CREATE TABLE Accounts (account_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, account_type_id INTEGER, balance REAL, date_opened TEXT)"
-        val createTransactionTableQuery = "CREATE TABLE Transactions (transaction_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, account_id INTEGER, date_time TEXT, description TEXT, amount REAL)"
+        val createTransactionTableQuery = "CREATE TABLE Transactions (transaction_id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, account_id INTEGER, date_time TEXT, description TEXT, amount REAL, type INTEGER)"
         val createAccountTypesTableQuery = "CREATE TABLE AccountTypes (account_type_id INTEGER PRIMARY KEY AUTOINCREMENT, limits INTEGER, minimum INTEGER, type TEXT)"
 
         db.execSQL(createClientTableQuery)
@@ -113,7 +115,7 @@ class DBFunctions(context: Context) :
         return db.insert("Accounts", null, contentValues)
     }
 
-    fun insertTransaction(transactionID: String, userID: String, accountId: Int, amount: Double, description: String, dateTime: String): Long {
+    fun insertTransaction(transactionID: String, userID: String, accountId: Int, amount: Double, description: String, dateTime: String, types: Int): Long {
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put("transaction_id", transactionID)
@@ -122,6 +124,7 @@ class DBFunctions(context: Context) :
             put("description", description)
             put("amount", amount)
             put("date_time", dateTime)
+            put("type", types)
         }
         return db.insert("Transactions", null, contentValues)
     }
@@ -225,5 +228,7 @@ class DBFunctions(context: Context) :
         val amount: Double,
         var address: String
     )
-    data class Account(val account_id: Int, val user_id: Int, val account_type_id: Int, val balance: Double, val date_opened: String)
+
+    @Parcelize
+    data class Account(val account_id: Int, val user_id: Int, val account_type_id: Int, val balance: Double, val date_opened: String) : Parcelable
 }

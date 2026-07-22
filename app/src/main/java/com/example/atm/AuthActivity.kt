@@ -15,6 +15,8 @@ class AuthActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val dbFunctions = DBFunctions.getInstance(this)
+        //dbFunctions.clearAllData()
         setContentView(R.layout.activity_auth)
         val getFirstName = findViewById<EditText>(R.id.etFirstName)
         val getLastName = findViewById<EditText>(R.id.getLastName)
@@ -26,12 +28,10 @@ class AuthActivity : AppCompatActivity() {
         val btnSignIn = findViewById<Button>(R.id.btnSignIn)
         val btnSignUp = findViewById<Button>(R.id.btnSignUp)
 
-        val dbFunctions = DBFunctions.getInstance(this)
 
         btnSignIn.setOnClickListener {
             val username = getUsername.text.toString().trim()
             val password = getPassword.text.toString().trim()
-           //dbFunctions.clearAllData()
             if (username.isEmpty() || password.isEmpty()) {
                 showAlert("Error", "Please fill out both username and password fields.")
                 return@setOnClickListener
@@ -100,10 +100,6 @@ class AuthActivity : AppCompatActivity() {
     }
 
     private fun navigateToMain(userId: Int) {
-        val sharedPreferences = this.getSharedPreferences("LocalAuth", Context.MODE_PRIVATE)
-
-        sharedPreferences.edit { putInt("user_id", userId) }
-
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("user_id", userId)
         }

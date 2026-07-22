@@ -50,7 +50,8 @@ class ChooseActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val accounts = withContext(Dispatchers.IO) {
                 //get all accounts
-                DBFunctions.getInstance(this@ChooseActivity).getClientAccountsByType(userId, accountType)
+                DBFunctions.getInstance(this@ChooseActivity)
+                    .getClientAccountsByType(userId, accountType)
             }
 
             if (accounts.isEmpty()) {
@@ -63,58 +64,15 @@ class ChooseActivity : AppCompatActivity() {
                 return@launch
             }
 
-            if (accounts.size == 1) {
-                navigateToDestination(accounts[0], accountType)
-            } else {
-                showAccountSelectionDialog(accounts, accountType)
+            val intent = Intent(this@ChooseActivity, AccountsActivity::class.java).apply {
+                putExtra("account_type", accountType)
+                putExtra("user_id", userId)
+                putExtra("page", page)
+                putParcelableArrayListExtra("accounts", ArrayList(accounts))
             }
-        }
+            startActivity(intent)
+            finish()
+            }
     }
 
-    private fun showAccountSelectionDialog(accounts: List<DBFunctions.Account>, accountType: Int) {
-        //looked up the formatting
-        val accountLabels = accounts.map { "Account #${it.account_id} (Balance: \$${String.format("%.2f", it.balance)})" }.toTypedArray()
-
-        AlertDialog.Builder(this)
-            .setTitle("Select an Account")
-            .setItems(accountLabels) { _, ind ->
-                val selectedAccount = accounts[ind]
-                navigateToDestination(selectedAccount, accountType)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun navigateToDestination(account: DBFunctions.Account, accountType: Int) {
-        when (page) {
-            "deposit" -> {
-                val intent = Intent(this, DepositActivity::class.java).apply {
-                    putExtra("account_id", account.account_id)
-                    putExtra("account_type", accountType)
-                    putExtra("user_id", userId)
-                }
-                startActivity(intent)
-            }
-            "withdraw" -> {
-                val intent = Intent(this, WithdrawActivity::class.java).apply {
-                    putExtra("account_id", account.account_id)
-                    putExtra("account_type", accountType)
-                    putExtra("user_id", userId)
-                }
-                startActivity(intent)
-            }
-            else -> {
-                lifecycleScope.launch {
-                    val amount = withContext(Dispatchers.IO) {
-                        Bank().getBalance(this@ChooseActivity, account)
-                    }
-                    val resultIntent = Intent().apply {
-                        putExtra("amount", amount)
-                    }
-                    setResult(RESULT_OK, resultIntent)
-                    finish()
-                }
-            }
-        }
-    }
 }

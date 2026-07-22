@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import com.example.atm.objects.History
 import com.example.sql.DBFunctions
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -103,7 +104,8 @@ class Bank {
                 val history = History(
                     txt = cursor.getString(cursor.getColumnIndexOrThrow("description")),
                     dte = cursor.getString(cursor.getColumnIndexOrThrow("date_time")),
-                    id = cursor.getInt(cursor.getColumnIndexOrThrow("transaction_id"))
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow("transaction_id")),
+                    type = cursor.getInt(cursor.getColumnIndexOrThrow("type"))
                 )
                 historyList.add(history)
             } while (cursor.moveToNext())
@@ -132,14 +134,15 @@ class Bank {
             date_opened = getCurrentDateTime()
         )
         db.updateAccount(updatedAccount)
-
+        val defaultFormat = NumberFormat.getCurrencyInstance().format(num)
         db.insertTransaction(
             transactionID = System.currentTimeMillis().toString(),
             userID = userId.toString(),
             accountId = accountId,
             amount = num,
-            description = "Deposit to ${acc.toString().replaceFirstChar { it.uppercase() }}",
-            dateTime = getCurrentDateTime()
+            description = "Deposit ${defaultFormat} to ${acc.toString().replaceFirstChar { it.uppercase() }}",
+            dateTime = getCurrentDateTime(),
+            types = type
         )
 
         onComplete(true)
@@ -168,14 +171,16 @@ class Bank {
                     date_opened = getCurrentDateTime()
                 )
                 db.updateAccount(updatedAccount)
+                val defaultFormat = NumberFormat.getCurrencyInstance().format(num)
 
                 db.insertTransaction(
                     transactionID = System.currentTimeMillis().toString(),
                     userID = userId.toString(),
                     accountId = accountId,
                     amount = num,
-                    description = "Withdrawal from ${acc.toString().replaceFirstChar { it.uppercase() }}",
-                    dateTime = getCurrentDateTime()
+                    description = "Withdrawal ${defaultFormat} from ${acc.toString().replaceFirstChar { it.uppercase() }}",
+                    dateTime = getCurrentDateTime(),
+                    types = type
                 )
 
                 onComplete(true)
